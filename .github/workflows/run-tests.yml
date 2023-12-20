@@ -40,8 +40,8 @@ jobs:
       - name: Checkout neofs-testcases repository
         uses: actions/checkout@v3
         with:
-          repository: nspcc-dev/neofs-testcases
-          ref: 'master'
+          repository: evgeniiz321/neofs-testcases
+          ref: 'ISSUE-244'
           path: neofs-testcases
 
       - name: Checkout neofs-dev-env repository
@@ -159,6 +159,19 @@ jobs:
           make venv.local-pytest
         working-directory: neofs-testcases
 
+      # - name: Checkout neofs-testlib repository
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: nspcc-dev/neofs-testlib
+      #     ref: 'master'
+      #     path: neofs-testlib
+
+      # - name: Install custom testlib
+      #   timeout-minutes: 30
+      #   run: |
+      #     . venv.local-pytest/bin/activate && pip install -e ../neofs-testlib
+      #   working-directory: neofs-testcases
+
       - name: Prepare test environment
         id: prepare_test_env
         timeout-minutes: 30
@@ -225,11 +238,12 @@ jobs:
         working-directory: neofs-dev-env
 
 ################################################################
+
       - name: Run Sanity tests for pull requests
         timeout-minutes: 120
         if: github.event_name == 'pull_request'
         run: |
-          source venv.local-pytest/bin/activate && pytest --show-capture=no -m "sanity" --alluredir=${GITHUB_WORKSPACE}/allure-results pytest_tests/testsuites
+          source venv.local-pytest/bin/activate && pytest -s -m "grpc_api" --alluredir=${GITHUB_WORKSPACE}/allure-results pytest_tests/testsuites
         working-directory: neofs-testcases
 
       - name: Run all tests for other events
@@ -240,6 +254,14 @@ jobs:
         working-directory: neofs-testcases
 
 ################################################################
+
+      - name: Archive allure report raw results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: allure-report-raw-results
+          path: allure-results
+
       - name: Generate Allure report
         timeout-minutes: 60
         uses: simple-elf/allure-report-action@v1.6
